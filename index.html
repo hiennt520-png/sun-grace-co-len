@@ -42,11 +42,11 @@ textarea,input,select{width:100%;padding:11px;border:1px solid #dfe2ea;border-ra
 
 <div id="learn" class="activity show"><div class="grid"><div class="card"><h2>Core language</h2><div class="quote"><b>Today’s goal:</b> <span id="unitGoal"></span></div><div id="grammar"></div><button class="btn primary" onclick="done('learn')">Complete Learn</button></div><div class="card"><h2>Today's collocations</h2><div id="vocab"></div></div></div></div>
 
-<div id="pron" class="activity"><div class="card"><h2>Pronunciation Lab</h2><p class="muted">Listen → notice stress → repeat 2–3 times.</p><div id="words"></div><div class="quote" id="pronSentence"></div><button class="btn primary" onclick="say(document.getElementById('pronSentence').innerText)">▶ Play sentence</button> <button class="btn ok" onclick="done('pron')">Complete Pronunciation</button></div></div>
+<div id="pron" class="activity"><div class="card"><h2>Pronunciation Lab</h2><p class="muted">Listen → notice stress → repeat 2–3 times.</p><div id="words"></div><div class="quote" id="pronSentence"></div><button class="btn primary" onclick="say(document.getElementById('pronSentence').innerText)">🔊 Play sentence</button> <button class="btn" onclick="stopAudio()">⏹ Stop</button> <button class="btn ok" onclick="done('pron')">Complete Pronunciation</button><p id="audioStatus" class="small muted" aria-live="polite"></p></div></div>
 
 <div id="speak" class="activity"><div class="card"><h2>Speaking Lab</h2><p id="speakPrompt"></p><button class="btn primary" onclick="startRec()">🎙 Start</button> <button class="btn" onclick="stopRec()">Stop</button><p id="recstatus" class="muted"></p><textarea id="transcript" rows="7" placeholder="Speech transcript appears here when supported."></textarea><button class="btn ok" onclick="evaluateSpeaking()">Check speaking</button><div id="speakfb" class="feedback"></div></div></div>
 
-<div id="shadow" class="activity"><div class="card"><h2>Shadowing Room</h2><p class="muted">Listen once. Repeat immediately. Copy rhythm, stress and pacing.</p><div class="quote" id="shadowline"></div><button class="btn primary" onclick="playShadow()">▶ Play</button> <button class="btn" onclick="nextShadow()">Next</button><p class="small muted" id="shadowTip"></p><button class="btn ok" onclick="done('shadow')">Complete Shadowing</button></div></div>
+<div id="shadow" class="activity"><div class="card"><h2>Shadowing Room</h2><p class="muted">Listen once. Repeat immediately. Copy rhythm, stress and pacing.</p><div class="quote" id="shadowline"></div><button class="btn primary" onclick="playShadow()">🔊 Play</button> <button class="btn" onclick="stopAudio()">⏹ Stop</button> <button class="btn" onclick="nextShadow()">Next</button><p class="small muted" id="shadowTip"></p><button class="btn ok" onclick="done('shadow')">Complete Shadowing</button></div></div>
 
 <div id="write" class="activity"><div class="card"><h2>Writing Lab</h2><p id="writePrompt"></p><textarea id="writing" rows="9"></textarea><button class="btn ok" onclick="evaluateWriting()">Check writing</button> <button class="btn primary" onclick="done('write')">Complete Writing</button><div id="writefb" class="feedback"></div></div></div>
 
@@ -205,7 +205,56 @@ function showActivity(id){
 }
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>showActivity(b.dataset.a))
 
-function say(t){let u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.82;speechSynthesis.speak(u)}
+let speechReady=false;
+function loadVoices(){
+  try{
+    const voices=window.speechSynthesis.getVoices();
+    speechReady=voices.length>0;
+    return voices;
+  }catch(e){return []}
+}
+if('speechSynthesis' in window){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged=()=>loadVoices();
+}
+function stopAudio(){
+  if('speechSynthesis' in window){window.speechSynthesis.cancel();}
+  const el=document.getElementById('audioStatus'); if(el) el.textContent='Audio stopped.';
+}
+function setAudioStatus(msg){
+  const el=document.getElementById('audioStatus'); if(el) el.textContent=msg;
+}
+function say(text){
+  text=String(text||'').replace(/\s+/g,' ').trim();
+  if(!text) return;
+  if(!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)){
+    setAudioStatus('Audio is not supported in this browser. Try Chrome or Safari.');
+    return;
+  }
+  try{
+    const synth=window.speechSynthesis;
+    synth.cancel();
+    const voices=loadVoices();
+    const voice=voices.find(v=>/^en(-|_)(US|GB|AU|CA|IE|NZ)/i.test(v.lang)) || voices.find(v=>/^en/i.test(v.lang));
+    const chunks=text.match(/.{1,180}(?:\s+|$)/g)||[text];
+    let index=0;
+    setAudioStatus('🔊 Playing…');
+    const speakNext=()=>{
+      if(index>=chunks.length){setAudioStatus('✓ Finished.');return;}
+      const u=new SpeechSynthesisUtterance(chunks[index++].trim());
+      u.lang='en-US'; u.rate=.82; u.pitch=1; u.volume=1;
+      if(voice) u.voice=voice;
+      u.onend=speakNext;
+      u.onerror=(e)=>{setAudioStatus('Audio error. Please tap Play again.'); console.warn('Speech synthesis error:',e.error);};
+      synth.speak(u);
+    };
+    // A short delay helps Chrome/mobile browsers finish cancelling a previous utterance.
+    window.setTimeout(speakNext,80);
+  }catch(e){
+    setAudioStatus('Audio could not start. Please tap Play again.');
+    console.error(e);
+  }
+}
 let rec;function startRec(){let SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){document.getElementById('recstatus').textContent='Speech recognition is not supported in this browser. You can still speak aloud and type your answer.';return}rec=new SR();rec.lang='en-US';rec.continuous=true;rec.interimResults=true;rec.onstart=()=>document.getElementById('recstatus').textContent='Listening…';rec.onresult=e=>{let s='';for(let i=e.resultIndex;i<e.results.length;i++)s+=e.results[i][0].transcript+' ';document.getElementById('transcript').value+=s};rec.onend=()=>document.getElementById('recstatus').textContent='Stopped.';rec.start()}function stopRec(){if(rec)rec.stop()}
 function evaluateSpeaking(){
   let t=document.getElementById('transcript').value.toLowerCase();
