@@ -44,7 +44,7 @@ textarea,input,select{width:100%;padding:11px;border:1px solid #dfe2ea;border-ra
 
 <div id="pron" class="activity"><div class="card"><h2>Pronunciation Lab</h2><p class="muted">Listen → notice stress → repeat 2–3 times.</p><div id="words"></div><div class="quote" id="pronSentence"></div><button class="btn primary" onclick="say(document.getElementById('pronSentence').innerText)">🔊 Play sentence</button> <button class="btn" onclick="stopAudio()">⏹ Stop</button> <button class="btn ok" onclick="done('pron')">Complete Pronunciation</button><p id="audioStatus" class="small muted" aria-live="polite"></p></div></div>
 
-<div id="speak" class="activity"><div class="card"><h2>Speaking Lab</h2><p id="speakPrompt"></p><button class="btn primary" onclick="startRec()">🎙 Start</button> <button class="btn" onclick="stopRec()">Stop</button><p id="recstatus" class="muted"></p><textarea id="transcript" rows="7" placeholder="Speech transcript appears here when supported."></textarea><button class="btn ok" onclick="evaluateSpeaking()">Check speaking</button><div id="speakfb" class="feedback"></div></div></div>
+<div id="speak" class="activity"><div class="card"><h2>Speaking Lab</h2><p id="speakPrompt"></p><button type="button" class="btn primary" onclick="startRec()">🎙 Start</button> <button type="button" class="btn" onclick="stopRec()">Stop</button><p id="recstatus" class="muted"></p><textarea id="transcript" rows="7" placeholder="Speech transcript appears here when supported."></textarea><button class="btn ok" onclick="evaluateSpeaking()">Check speaking</button><div id="speakfb" class="feedback"></div></div></div>
 
 <div id="shadow" class="activity"><div class="card"><h2>Shadowing Room</h2><p class="muted">Listen once. Repeat immediately. Copy rhythm, stress and pacing.</p><div class="quote" id="shadowline"></div><button class="btn primary" onclick="playShadow()">🔊 Play</button> <button class="btn" onclick="stopAudio()">⏹ Stop</button> <button class="btn" onclick="nextShadow()">Next</button><p class="small muted" id="shadowTip"></p><button class="btn ok" onclick="done('shadow')">Complete Shadowing</button></div></div>
 
@@ -128,7 +128,7 @@ function renderDashboard(){
   if(completeBtn){
     const allDone=['learn','pron','speak','shadow','write','quiz'].every(x=>!!st[x]);
     completeBtn.disabled=!!st.completed || !allDone;
-    completeBtn.textContent=st.completed ? '✓ Unit completed' : (allDone ? '✓ Mark unit complete' : '🔒 Complete all 6 activities first');
+    completeBtn.textContent=st.completed ? '✓ Unit completed' : (allDone ? '✓ Unit ready to complete' : '🔒 Complete all 6 activities first');
   }
   renderPath();
 }
@@ -230,11 +230,19 @@ function recordMistake(type,data){
 function done(a){
   let st=state[key(unitIndex)]||{};
   st[a]=true;
+  const required=['learn','pron','speak','shadow','write','quiz'];
+  if(required.every(x=>!!st[x])) st.completed=true;
   state[key(unitIndex)]=st;
   addStudyDay();
   save();
   renderDashboard();
-  toast('Activity completed ☀️');
+  if(st.completed && unitIndex<units.length-1){
+    toast('Unit completed! The next unit is now unlocked. ☀️');
+  }else if(st.completed){
+    toast('Amazing — you completed the full learning path! ☀️');
+  }else{
+    toast('Activity completed ☀️');
+  }
 }
 function completeUnit(){
   let st=state[key(unitIndex)]||{};
@@ -322,7 +330,55 @@ function say(text){
     console.error(e);
   }
 }
-let rec;function startRec(){let SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){document.getElementById('recstatus').textContent='Speech recognition is not supported in this browser. You can still speak aloud and type your answer.';return}rec=new SR();rec.lang='en-US';rec.continuous=true;rec.interimResults=true;rec.onstart=()=>document.getElementById('recstatus').textContent='Listening…';rec.onresult=e=>{let s='';for(let i=e.resultIndex;i<e.results.length;i++)s+=e.results[i][0].transcript+' ';document.getElementById('transcript').value+=s};rec.onend=()=>document.getElementById('recstatus').textContent='Stopped.';rec.start()}function stopRec(){if(rec)rec.stop()}
+let rec;let recognition=null;
+let recordingActive=false;
+function startRec(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    toast('Speech recognition is not supported in this browser. Try Chrome.');
+    return;
+  }
+  if(recognition){try{recognition.abort();}catch(e){}}
+  const box=document.getElementById('transcript');
+  box.value='';
+  recognition=new SR();
+  recognition.lang='en-US';
+  recognition.continuous=false;
+  recognition.interimResults=true;
+  recordingActive=true;
+
+  recognition.onstart=()=>{
+    document.getElementById('recStatus').textContent='🎙 Listening...';
+  };
+  recognition.onresult=(event)=>{
+    let finalText='';
+    let interimText='';
+    for(let i=event.resultIndex;i<event.results.length;i++){
+      const text=event.results[i][0].transcript;
+      if(event.results[i].isFinal) finalText+=text+' ';
+      else interimText+=text;
+    }
+    if(finalText.trim()){
+      box.value=(box.value+' '+finalText).trim().replace(/\s+/g,' ');
+    }
+    document.getElementById('recStatus').textContent=
+      interimText ? '🎙 '+interimText : '🎙 Listening...';
+  };
+  recognition.onerror=(e)=>{
+    recordingActive=false;
+    document.getElementById('recStatus').textContent=
+      e.error==='not-allowed' ? 'Microphone permission denied.' : 'Recording error: '+e.error;
+  };
+  recognition.onend=()=>{
+    recordingActive=false;
+    document.getElementById('recStatus').textContent='✓ Recording finished';
+  };
+  try{recognition.start();}catch(e){
+    recordingActive=false;
+    document.getElementById('recStatus').textContent='Could not start recording.';
+  }
+}
+function stopRec(){if(rec)rec.stop()}
 function evaluateSpeaking(){
   let t=document.getElementById('transcript').value.toLowerCase().trim();
   let ks=units[unitIndex].tags;
