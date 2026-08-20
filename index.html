@@ -21,6 +21,16 @@ textarea,input,select{width:100%;padding:11px;border:1px solid #dfe2ea;border-ra
 .toast{position:fixed;right:18px;bottom:18px;background:#172033;color:#fff;padding:12px 15px;border-radius:11px;display:none;max-width:320px;z-index:10}
 @media(max-width:820px){.hero,.grid,.two{grid-template-columns:1fr}.path{grid-template-columns:1fr 1fr}.unitgrid{grid-template-columns:1fr 1fr}.top{flex-direction:column;align-items:flex-start}}
 @media(max-width:520px){.unitgrid,.path{grid-template-columns:1fr}}
+
+.translation-q{border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0;background:#fff}
+.translation-q textarea{width:100%;box-sizing:border-box;margin-top:8px}
+.progress-item{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}
+.progress-item:last-child{border-bottom:0}
+.progress-icon{width:24px;flex:0 0 24px}
+.progress-alert{margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff7e8;color:#7b4b00}
+.progress-good{margin-top:10px;padding:10px 12px;border-radius:10px;background:#eaf8f3;color:#0e6b53}
+.translation-note{font-size:12px;color:var(--muted);margin-top:6px}
+
 </style>
 </head>
 <body>
@@ -29,8 +39,8 @@ textarea,input,select{width:100%;padding:11px;border:1px solid #dfe2ea;border-ra
 <main class="wrap">
 <section id="dashboard" class="show">
 <div class="hero">
-<div class="card"><span class="level" id="levelLabel">LEVEL 1 · FOUNDATION</span><h1 id="unitTitle" style="margin-top:8px">Unit 01 · My Role in Marketing</h1><p class="muted" id="unitDesc">Describe your role, responsibilities, reporting line and team.</p><div id="unitTags"></div><div style="margin-top:14px" class="progress"><div class="bar" id="bar"></div></div><div class="small muted" id="prog">0/6 activities completed</div><div style="margin-top:14px"><button class="btn primary" onclick="openLesson()">▶ Continue today's unit</button></div></div>
-<div class="card"><h2>Today's goal</h2><p id="goal">Use responsible for, in charge of, report to and supervise confidently.</p><div class="quote"><b>15–20 min</b><br>Learn → Pronunciation → Speak → Shadow → Write → Practice</div><button class="btn ok" id="completeUnitBtn" onclick="completeUnit()" disabled>🔒 Complete all 6 activities first</button></div>
+<div class="card"><span class="level" id="levelLabel">LEVEL 1 · FOUNDATION</span><h1 id="unitTitle" style="margin-top:8px">Unit 01 · My Role in Marketing</h1><p class="muted" id="unitDesc">Describe your role, responsibilities, reporting line and team.</p><div id="unitTags"></div><div style="margin-top:14px" class="progress"><div class="bar" id="bar"></div></div><div class="small muted" id="prog">0/7 activities completed</div><div style="margin-top:14px"><button class="btn primary" onclick="openLesson()">▶ Continue today's unit</button></div></div>
+<div class="card"><h2>Today's goal</h2><p id="goal">Use responsible for, in charge of, report to and supervise confidently.</p><div class="quote"><b>15–20 min</b><br>Learn → Pronunciation → Speak → Shadow → Translation → Write → Practice</div><button class="btn ok" id="completeUnitBtn" type="button" disabled>🔒 Finish the checklist to unlock the next unit</button></div>
 </div>
 <div class="card"><h2>Learning path</h2><div class="path" id="path"></div></div>
 <div class="card"><h2>My Progress</h2><div class="two"><div><b>Completed units</b><div id="unitsDone">0 / 25</div></div><div><b>Current level</b><div id="currentLevel">Level 1 — Foundation</div></div></div><div style="margin-top:13px"><button class="btn" onclick="showTab('review')">🔄 Review my weak points</button> <button class="btn" onclick="showTab('data')">💾 Export / Import progress</button></div></div>
@@ -38,6 +48,14 @@ textarea,input,select{width:100%;padding:11px;border:1px solid #dfe2ea;border-ra
 
 <section id="lesson">
 <div class="card"><button class="btn" onclick="showTab('dashboard')">← Dashboard</button><span class="pill" id="lessonBadge"></span><h1 id="lessonHeading" style="margin-top:10px"></h1><p class="muted" id="lessonIntro"></p></div>
+<div class="card" id="unitProgressCard">
+  <div class="two" style="align-items:center">
+    <div><h2 style="margin-bottom:2px">Unit Progress</h2><div class="small muted">Complete every activity to unlock the next unit.</div></div>
+    <div id="unitProgressCount" class="small muted" style="text-align:right"></div>
+  </div>
+  <div id="unitProgressList" style="margin-top:10px"></div>
+  <div id="unitNextHint"></div>
+</div>
 <div class="tabs"><button class="active" data-a="learn">1 Learn</button><button data-a="pron">2 Pronunciation</button><button data-a="speak">3 Speak</button><button data-a="shadow">4 Shadowing</button><button data-a="write">5 Write</button><button data-a="practice">6 Practice</button></div>
 
 <div id="learn" class="activity show"><div class="grid"><div class="card"><h2>Core language</h2><div class="quote"><b>Today’s goal:</b> <span id="unitGoal"></span></div><div id="grammar"></div><button class="btn primary" onclick="done('learn')">Complete Learn</button></div><div class="card"><h2>Today's collocations</h2><div id="vocab"></div></div></div></div>
@@ -48,7 +66,23 @@ textarea,input,select{width:100%;padding:11px;border:1px solid #dfe2ea;border-ra
 
 <div id="shadow" class="activity"><div class="card"><h2>Shadowing Room</h2><p class="muted">Listen once. Repeat immediately. Copy rhythm, stress and pacing.</p><div class="quote" id="shadowline"></div><button class="btn primary" onclick="playShadow()">🔊 Play</button> <button class="btn" onclick="stopAudio()">⏹ Stop</button> <button class="btn" onclick="nextShadow()">Next</button><p class="small muted" id="shadowTip"></p><button class="btn ok" onclick="done('shadow')">Complete Shadowing</button></div></div>
 
-<div id="write" class="activity"><div class="card"><h2>Writing Lab</h2><p id="writePrompt"></p><textarea id="writing" rows="9"></textarea><button class="btn ok" onclick="evaluateWriting()">Check writing</button> <button class="btn primary" onclick="done('write')">Complete Writing</button><div id="writefb" class="feedback"></div></div></div>
+<div id="write" class="activity">
+  <div class="card">
+    <h2>Writing 1 · Translation Practice</h2>
+    <p class="muted">Translate 5 Vietnamese sentences into English. Aim for at least 80% to complete this activity.</p>
+    <div id="translationWriting"></div>
+    <button class="btn primary" type="button" onclick="checkTranslationSet()">✓ Check all answers</button>
+    <button class="btn" type="button" onclick="clearTranslationSet()">↺ Try again</button>
+    <div id="translationSummary" class="feedback"></div>
+  </div>
+  <div class="card">
+    <h2>Writing 2 · Free Writing</h2>
+    <p id="writePrompt"></p>
+    <textarea id="writing" rows="9" placeholder="Write about 80–120 words..."></textarea>
+    <button class="btn ok" type="button" onclick="evaluateWriting()">Check writing</button>
+    <div id="writefb" class="feedback"></div>
+  </div>
+</div>
 
 <div id="practice" class="activity"><div class="card"><h2>Daily Practice</h2><div id="quiz"></div><button class="btn primary" onclick="grade()">Check answers</button><div id="quizfb" class="feedback"></div></div></div>
 </section>
@@ -82,6 +116,18 @@ function allUnits(){
   return a;
 }
 const units=allUnits();
+// V3.1 migration: units completed in older 6-step versions must complete
+// the new Writing Translation activity before unlocking the next unit.
+let migrationChanged=false;
+Object.keys(state).forEach(k=>{
+  if(/^u\d+$/.test(k) && state[k] && state[k].completed && !state[k].writeTranslation){
+    state[k].completed=false;
+    migrationChanged=true;
+  }
+});
+if(migrationChanged)localStorage.setItem('sgcl_final',JSON.stringify(state));
+const translationSets={"My Role in Marketing":[["Tôi chịu trách nhiệm xây dựng media strategy cho các chiến dịch quảng cáo digital.","I am responsible for developing media strategies for digital advertising campaigns."],["Tôi phụ trách triển khai chiến dịch trên Meta và Google.","I am in charge of campaign execution across Meta and Google."],["Tôi báo cáo trực tiếp cho Media Manager.","I report directly to the Media Manager."],["Tôi quản lý ba Media Executives.","I supervise three Media Executives."],["Trách nhiệm của tôi bao gồm media planning và campaign reporting.","My responsibilities include media planning and campaign reporting."]],"My Team & Company":[["Tôi làm việc trong team Media.","I work in the Media team."],["Tôi làm việc chặt chẽ với team Account và Creative.","I work closely with the Account and Creative teams."],["Tôi là thành viên của team Performance Marketing.","I am part of the Performance Marketing team."],["Tôi phối hợp với Sales để triển khai chiến dịch.","I coordinate with Sales on campaign delivery."],["Đây là một dự án có sự tham gia của nhiều phòng ban.","This is a cross-functional project."]],"Daily Marketing Work":[["Công việc của tôi bao gồm lập kế hoạch và tối ưu các chiến dịch digital.","My role involves planning and optimizing digital campaigns."],["Tôi dành nhiều thời gian để phân tích dữ liệu chiến dịch.","I spend a lot of time analyzing campaign data."],["Tôi thường kiểm tra hiệu quả chiến dịch vào buổi sáng.","I usually review campaign performance in the morning."],["Tôi phụ trách campaign reporting.","I handle campaign reporting."],["Tôi ưu tiên các yêu cầu khẩn cấp từ khách hàng.","I prioritize urgent client requests."]],"Reporting & KPIs":[["Tôi báo cáo về campaign performance mỗi tuần.","I report on campaign performance every week."],["Chúng tôi theo dõi CPM, CTR, CPL và conversion rate.","We track CPM, CTR, CPL, and conversion rate."],["Chúng tôi đo lường tác động của chiến dịch so với benchmark.","We measure campaign impact against the benchmark."],["Chúng tôi so sánh kết quả thực tế với dự báo.","We compare actual results with the forecast."],["Kết quả thực tế cao hơn dự báo.","The actual results were above the forecast."]],"Media Planning":[["Media plan của chúng tôi tập trung vào việc thu traffic chất lượng.","Our media plan focuses on driving qualified traffic."],["Chúng tôi phân bổ 55,5% ngân sách cho Consideration.","We allocate 55.5% of the budget to Consideration."],["Kế hoạch được thiết kế để tối đa hóa tác động của chiến dịch.","The plan is designed to maximize campaign impact."],["Chúng tôi đặt mục tiêu thu traffic chất lượng về website.","We aim to drive qualified website traffic."],["Chúng tôi sử dụng media mix cân bằng giữa performance và awareness.","We use a balanced media mix between performance and awareness."]],"Target Audience":[["Chúng tôi nhắm đến nhóm Premium Hybrid Seekers.","We target Premium Hybrid Seekers."],["Tệp audience được xây dựng dựa trên dữ liệu khách hàng.","The audience is based on customer data."],["Những người dùng này phù hợp với chân dung khách hàng mục tiêu.","These users match our target customer profile."],["Chúng tôi tìm kiếm các tín hiệu audience có tiềm năng cao.","We look for high-potential audience signals."],["Tìm kiếm về xe hybrid là một tín hiệu intent mạnh.","Hybrid car searches are strong intent signals."]],"Media Strategy":[["Chiến lược của chúng tôi tập trung vào việc thúc đẩy Consideration.","Our strategy focuses on driving consideration."],["Chúng tôi ưu tiên các audience có tiềm năng cao.","We prioritize high-potential audiences."],["Chúng tôi sử dụng Google để nắm bắt nhu cầu tìm kiếm.","We use Google to capture search intent."],["Chúng tôi ưu tiên performance trong khi vẫn duy trì awareness.","We prioritize performance while maintaining awareness."],["Lý do cho cách tiếp cận này dựa trên hiệu quả lịch sử.","The rationale for this approach is based on historical performance."]],"Budget Allocation":[["Chúng tôi phân bổ 55,5% ngân sách cho Consideration.","We allocate 55.5% of the budget to Consideration."],["Chúng tôi chi nhiều ngân sách hơn cho các kênh đã được chứng minh hiệu quả.","We spend more on proven channels."],["Chúng tôi tăng chi tiêu trong mùa bán hàng cao điểm.","We increase spend during the high-sales season."],["Chúng tôi cân bằng performance với awareness.","We balance performance with awareness."],["Việc phân bổ ngân sách phản ánh các ưu tiên của chiến dịch.","The budget allocation reflects campaign priorities."]],"Campaign Performance":[["CTR tăng 15%.","CTR increased by 15%."],["CPL giảm xuống còn 8 đô la.","CPL decreased to $8."],["Chiến dịch có hiệu quả cao hơn benchmark.","The campaign performed above the benchmark."],["Chiến dịch mang lại nhiều lead chất lượng hơn.","The campaign drove more qualified leads."],["Conversion tăng sau khi chúng tôi tối ưu chiến dịch.","Conversions increased after we optimized the campaign."]],"Optimization":[["Chúng tôi tối ưu campaign performance mỗi ngày.","We optimize campaign performance every day."],["Chúng tôi thử nghiệm hai định dạng creative với nhau.","We test two creative formats against each other."],["Chúng tôi điều chỉnh phân bổ ngân sách dựa trên performance.","We adjust budget allocation based on performance."],["Chúng tôi tăng đầu tư vào audience có hiệu quả tốt nhất.","We scale the best-performing audience."],["Nếu CPL tăng, chúng tôi sẽ thử nghiệm audience và creative mới.","If CPL increases, we will test new audiences and creatives."]],"Professional Email":[["Bạn có thể vui lòng gửi lại cho tôi báo cáo đã cập nhật không?","Could you please send me the updated report again?"],["Tôi viết email này để follow up về media plan.","I am writing to follow up on the media plan."],["Vui lòng xem media plan đã cập nhật trong file đính kèm.","Please find the updated media plan attached."],["Tôi rất cảm kích nếu bạn có thể xác nhận timeline.","I would appreciate it if you could confirm the timeline."],["Bạn có thể làm rõ target audience giúp tôi không?","Could you clarify the target audience for me?"]],"Giving Updates":[["Chiến dịch hiện đang đúng tiến độ.","The campaign is currently on track."],["Chúng tôi đã hoàn thành phần thiết lập audience.","We have completed the audience setup."],["Chúng tôi cần hoàn thiện creative.","We need to finalize the creatives."],["Chiến dịch dự kiến sẽ launch vào thứ Hai.","The campaign is expected to launch on Monday."],["Bước tiếp theo là launch chiến dịch.","The next step is to launch the campaign."]],"Asking for Clarification":[["Bạn có thể làm rõ campaign objective không?","Could you clarify the campaign objective?"],["Ý bạn là tổng ngân sách hay media budget?","Do you mean the total budget or the media budget?"],["Để xác nhận lại, chúng ta sẽ launch vào tuần tới đúng không?","Just to confirm, are we launching next week?"],["Bạn có thể giải thích KPI này được tính như thế nào không?","Could you explain how this KPI is calculated?"],["Tôi cần thêm thông tin để làm rõ brief.","I need more information to clarify the brief."]],"Giving Opinions":[["Tôi tin rằng chúng ta nên ưu tiên Consideration.","I believe we should prioritize Consideration."],["Theo quan điểm của tôi, Facebook là một kênh reach mạnh.","In my view, Facebook is a strong reach channel."],["Tôi đề xuất tăng ngân sách trong tuần cuối.","I suggest increasing the budget in the final week."],["Tôi khuyến nghị thử nghiệm một creative format mới.","I recommend testing a new creative format."],["Khuyến nghị này dựa trên historical performance.","This recommendation is based on historical performance."]],"Agreeing & Disagreeing":[["Tôi đồng ý rằng audience này phù hợp.","I agree that this audience is relevant."],["Tôi không chắc cách tiếp cận này có thể scale được.","I am not sure that this approach can scale."],["Mối lo ngại là audience này quá rộng.","The concern is that this audience is too broad."],["Tuy nhiên, chúng ta có thể test với một ngân sách nhỏ.","However, we can test it with a small budget."],["Chúng ta có thể cân nhắc một phương án thay thế.","We could consider an alternative approach."]],"Presenting Strategy":[["Chiến lược của chúng tôi tập trung vào toàn bộ marketing funnel.","Our strategy focuses on the full marketing funnel."],["Chúng tôi ưu tiên Consideration vì sản phẩm đã khá nổi tiếng.","We prioritize Consideration because the product is already well known."],["Chúng tôi phân bổ nhiều ngân sách hơn cho các kênh đã chứng minh hiệu quả.","We allocate more budget to channels with proven performance."],["Điều này cho phép chúng tôi tối đa hóa campaign performance.","This allows us to maximize campaign performance."],["Mục tiêu chính là thu traffic chất lượng.","The main objective is to drive qualified traffic."]],"Explaining Audience":[["Audience được xây dựng dựa trên first-party customer data.","The audience is based on first-party customer data."],["Những người dùng này phù hợp với premium customer profile.","These users match our premium customer profile."],["Chúng tôi xây dựng lookalike audiences từ những khách hàng chất lượng cao.","We build lookalike audiences from high-quality customers."],["Audience này được thiết kế để mở rộng qualified reach.","The audience is designed to expand qualified reach."],["Search behavior là một tín hiệu intent mạnh.","Search behavior is a strong intent signal."]],"Presenting Data":[["CTR tăng 15%.","CTR increased by 15%."],["Reach tăng lên 2,4 triệu.","Reach increased to 2.4 million."],["CPM giữ ổn định trong suốt phase.","CPM remained stable throughout the phase."],["Kết quả được cải thiện so với phase trước.","Results improved compared with the previous phase."],["Nhìn chung, xu hướng vẫn tích cực.","Overall, the trend remains positive."]],"Presenting Insights":[["Dữ liệu cho thấy audience có intent cao hiệu quả hơn.","The data suggests that high-intent audiences are more efficient."],["Điều này cho thấy creative phù hợp với audience.","This indicates that the creative is relevant to the audience."],["Điều này có nghĩa là chúng ta có thể scale audience này.","This means that we can scale this audience."],["Kết quả là chúng ta nên ưu tiên segment này.","As a result, we should prioritize this segment."],["Hàm ý là chúng ta nên chuyển thêm ngân sách sang nhóm có intent cao.","The implication is that we should shift more budget to high-intent audiences."]],"Strategic Recommendations":[["Tôi khuyến nghị tăng ngân sách trong tuần cuối.","I recommend increasing the budget in the final week."],["Chúng ta nên ưu tiên audience mạnh nhất.","We should prioritize the strongest audience."],["Điều này sẽ giúp chúng ta cải thiện efficiency.","This will help us improve efficiency."],["Để đảm bảo performance, chúng ta nên theo dõi CPL chặt chẽ.","To ensure performance, we should monitor CPL closely."],["Chiến dịch được thiết kế để thu traffic chất lượng.","The campaign is designed to drive qualified traffic."]],"Consumer Insights":[["Search behavior có thể được thúc đẩy bởi purchase intent.","Search behavior may be driven by purchase intent."],["Những người dùng có intent cao có khả năng convert cao hơn.","High-intent users are more likely to convert."],["Hành vi này cho thấy người dùng đang so sánh các lựa chọn.","This behavior suggests that users are comparing options."],["Insight này dựa trên hành vi quan sát được.","This insight is based on observed behavior."],["Website visits là một tín hiệu hữu ích về consideration.","Website visits are useful signals of consideration."]],"Business Impact":[["Media performance đóng góp vào việc tạo qualified leads.","Media performance contributes to generating qualified leads."],["Targeting tốt hơn có thể dẫn đến CPL thấp hơn.","Better targeting can result in a lower CPL."],["Brand awareness có thể tác động đến consideration.","Brand awareness can have an impact on consideration."],["Efficiency tốt hơn có thể chuyển thành nhiều lead hơn.","Improved efficiency can translate into more leads."],["Mục tiêu cuối cùng là kết nối media results với business impact.","The ultimate goal is to connect media results with business impact."]],"Measurement Framework":[["Campaign impact có thể được đo bằng nhiều chỉ số.","Campaign impact can be measured by multiple indicators."],["Chúng tôi so sánh kết quả chiến dịch với benchmark.","We compare campaign results against a benchmark."],["Conversion được attributed cho chiến dịch.","The conversion is attributed to the campaign."],["Measurement framework của chúng tôi vượt ra ngoài platform metrics.","Our measurement framework goes beyond platform metrics."],["Incrementality giúp ước tính tác động thực sự của chiến dịch.","Incrementality helps estimate the true campaign impact."]],"Pitching":[["Lý do tôi khuyến nghị cách tiếp cận này là historical data.","The reason I recommend this approach is the historical data."],["Dữ liệu cho thấy qualified audiences có hiệu quả tốt hơn.","The evidence shows that qualified audiences perform better."],["Cơ hội là scale segment mạnh nhất.","The opportunity is to scale the strongest segment."],["Rủi ro là audience có thể bị bão hòa.","The risk is that the audience may become saturated."],["Chúng ta nên theo dõi frequency để quản lý rủi ro này.","We should monitor frequency to manage this risk."]],"Negotiation":[["Có thể gia hạn deadline thêm hai ngày không?","Would it be possible to extend the deadline by two days?"],["Chúng ta có thể cân nhắc giảm scope không?","Could we consider reducing the scope?"],["Nếu giảm scope, chúng ta có thể giữ nguyên timeline.","If we reduce the scope, we could maintain the timeline."],["Tôi sẵn sàng điều chỉnh plan nếu objective không thay đổi.","I am willing to adjust the plan if the objective remains unchanged."],["Deliverable chính là media plan.","The main deliverable is the media plan."]]};
+
 function key(i){return 'u'+i}
 function unlocked(i){return i===0||!!state[key(i-1)]?.completed}
 
@@ -111,6 +157,108 @@ function renderPath(){
     });
   });
 }
+
+function unitActivities(){
+  return [
+    ['learn','📖','Learn'],
+    ['pron','🔊','Pronunciation'],
+    ['speak','🎙','Speaking'],
+    ['shadow','🗣','Shadowing'],
+    ['writeTranslation','✍️','Writing Translation'],
+    ['write','📝','Free Writing'],
+    ['quiz','🧠','Practice']
+  ];
+}
+function allUnitActivitiesDone(st){
+  st=st||state[key(unitIndex)]||{};
+  return unitActivities().every(a=>!!st[a[0]]);
+}
+function renderUnitProgress(){
+  const box=document.getElementById('unitProgressList');
+  if(!box)return;
+  const st=state[key(unitIndex)]||{};
+  const acts=unitActivities();
+  const doneCount=acts.filter(a=>!!st[a[0]]).length;
+  box.innerHTML=acts.map(a=>`<div class="progress-item"><div class="progress-icon">${st[a[0]]?'✅':'⬜'}</div><div><b>${a[2]}</b></div></div>`).join('');
+  const c=document.getElementById('unitProgressCount');
+  if(c)c.textContent=`${doneCount}/${acts.length} completed`;
+  const missing=acts.filter(a=>!st[a[0]]);
+  const hint=document.getElementById('unitNextHint');
+  if(hint){
+    hint.className=missing.length?'progress-alert':'progress-good';
+    hint.innerHTML=missing.length
+      ? `🔒 <b>Next unit is locked.</b> You still need to complete: ${missing.map(a=>a[2]).join(', ')}.`
+      : `🎉 <b>Unit completed.</b> The next unit is unlocked.`;
+  }
+}
+function normalizeTranslation(s){
+  return String(s||'').toLowerCase().replace(/[’']/g,"'").replace(/[“”"]/g,'"').replace(/\s+/g,' ').replace(/\s+([,.!?])/g,'$1').trim()
+    .replace(/\bi'm\b/g,'i am').replace(/\bwe're\b/g,'we are').replace(/\byou're\b/g,'you are').replace(/\bit's\b/g,'it is');
+}
+function translationScore(answer,expected){
+  const a=normalizeTranslation(answer),e=normalizeTranslation(expected);
+  if(!a)return {score:0,level:'missing'};
+  if(a===e)return {score:100,level:'correct'};
+  const aw=new Set(a.replace(/[.,!?$]/g,'').split(' ').filter(Boolean));
+  const ew=e.replace(/[.,!?$]/g,'').split(' ').filter(Boolean);
+  const overlap=ew.filter(w=>aw.has(w)).length/Math.max(1,ew.length);
+  if(overlap>=.88)return {score:90,level:'almost'};
+  if(overlap>=.72)return {score:75,level:'partial'};
+  if(overlap>=.55)return {score:55,level:'needs'};
+  return {score:25,level:'needs'};
+}
+function renderTranslationWriting(){
+  const box=document.getElementById('translationWriting');
+  if(!box)return;
+  const u=units[unitIndex];
+  const qs=translationSets[u.title]||[];
+  box.innerHTML=qs.map((q,i)=>`<div class="translation-q">
+    <div class="small muted">Question ${i+1} / 5</div>
+    <div class="quote"><b>${escapeHtml(q[0])}</b></div>
+    <textarea id="tw${i}" rows="3" placeholder="Write your English translation..."></textarea>
+    <div id="twfb${i}" class="feedback"></div>
+  </div>`).join('');
+  const sm=document.getElementById('translationSummary');
+  if(sm){sm.style.display='none';sm.innerHTML='';}
+}
+function clearTranslationSet(){
+  for(let i=0;i<5;i++){
+    const a=document.getElementById('tw'+i),f=document.getElementById('twfb'+i);
+    if(a)a.value='';
+    if(f){f.style.display='none';f.innerHTML='';}
+  }
+  const sm=document.getElementById('translationSummary');
+  if(sm){sm.style.display='none';sm.innerHTML='';}
+}
+function checkTranslationSet(){
+  const u=units[unitIndex],qs=translationSets[u.title]||[];
+  let total=0,fullyCorrect=0;
+  qs.forEach((q,i)=>{
+    const input=document.getElementById('tw'+i);
+    const fb=document.getElementById('twfb'+i);
+    const r=translationScore(input?input.value:'',q[1]);
+    total+=r.score;
+    if(r.level==='correct')fullyCorrect++;
+    let title='🔴 Needs improvement',why='Review the target structure, preposition, article, word form, and word order.';
+    if(r.level==='correct'){title='🟢 Correct';why='Excellent. Your answer matches the target sentence.';}
+    else if(r.level==='almost'){title='🟡 Almost correct';why='Very close. Check small grammar or wording differences.';}
+    else if(r.level==='partial'){title='🟠 Mostly right';why='The main idea is there, but the sentence still needs some correction.';}
+    if(fb){
+      fb.style.display='block';
+      fb.innerHTML=`<b>${title}</b><br>${why}<br><span class="small muted"><b>Suggested answer:</b> ${escapeHtml(q[1])}</span>`;
+    }
+    if(r.level!=='correct')recordMistake('translation',{question:q[0],answer:input?input.value:'',expected:q[1],score:r.score});
+  });
+  const avg=Math.round(total/Math.max(1,qs.length));
+  const sm=document.getElementById('translationSummary');
+  if(sm){
+    sm.style.display='block';
+    sm.innerHTML=`<b>Translation score: ${avg}/100 · ${fullyCorrect}/5 exact matches.</b><br>${avg>=80?'🎉 Translation Practice completed.':'Review the corrections and try again. You need 80% or more to complete this activity.'}`;
+  }
+  if(avg>=80)done('writeTranslation');
+  else{save();renderUnitProgress();}
+}
+
 function renderDashboard(){
   let u=units[unitIndex];
   document.getElementById('levelLabel').textContent=`LEVEL ${String(u.li+1).padStart(2,'0')} · ${u.level.toUpperCase()}`;
@@ -118,19 +266,20 @@ function renderDashboard(){
   document.getElementById('unitDesc').textContent=u.desc;
   document.getElementById('unitTags').innerHTML=u.tags.map(x=>`<span class="pill">${x}</span>`).join('');
   let st=state[key(unitIndex)]||{};
-  let n=['learn','pron','speak','shadow','write','quiz'].filter(x=>st[x]).length;
-  document.getElementById('bar').style.width=n/6*100+'%';
-  document.getElementById('prog').textContent=`${n}/6 activities completed`;
+  let n=unitActivities().filter(x=>st[x[0]]).length;
+  document.getElementById('bar').style.width=n/7*100+'%';
+  document.getElementById('prog').textContent=`${n}/7 activities completed`;
   document.getElementById('unitsDone').textContent=`${units.filter((_,i)=>state[key(i)]?.completed).length} / ${units.length}`;
   document.getElementById('currentLevel').textContent=`Level ${u.li+1} — ${u.level}`;
   document.getElementById('goal').textContent=u.content.goal;
   const completeBtn=document.getElementById('completeUnitBtn');
   if(completeBtn){
-    const allDone=['learn','pron','speak','shadow','write','quiz'].every(x=>!!st[x]);
-    completeBtn.disabled=!!st.completed || !allDone;
-    completeBtn.textContent=st.completed ? '✓ Unit completed' : (allDone ? '✓ Unit ready to complete' : '🔒 Complete all 6 activities first');
+    const allDone=allUnitActivitiesDone(st);
+    completeBtn.disabled=true;
+    completeBtn.textContent=st.completed ? '✓ Unit completed' : (allDone ? '✓ All activities completed' : '🔒 Finish the checklist to unlock the next unit');
   }
   renderPath();
+  renderUnitProgress();
 }
 
 function escapeHtml(s){
@@ -179,6 +328,8 @@ function loadUnit(i){
   buildQuiz(u);
   document.getElementById('transcript').value='';
   document.getElementById('writing').value='';
+  renderTranslationWriting();
+  renderUnitProgress();
   document.getElementById('speakfb').style.display='none';
   document.getElementById('writefb').style.display='none';
   document.getElementById('quizfb').style.display='none';
@@ -230,12 +381,12 @@ function recordMistake(type,data){
 function done(a){
   let st=state[key(unitIndex)]||{};
   st[a]=true;
-  const required=['learn','pron','speak','shadow','write','quiz'];
-  if(required.every(x=>!!st[x])) st.completed=true;
+  if(allUnitActivitiesDone(st))st.completed=true;
   state[key(unitIndex)]=st;
   addStudyDay();
   save();
   renderDashboard();
+  renderUnitProgress();
   if(st.completed && unitIndex<units.length-1){
     toast('Unit completed! The next unit is now unlocked. ☀️');
   }else if(st.completed){
@@ -246,20 +397,14 @@ function done(a){
 }
 function completeUnit(){
   let st=state[key(unitIndex)]||{};
-  const required=['learn','pron','speak','shadow','write','quiz'];
-  if(!required.every(x=>!!st[x])){
-    toast('Finish all 6 activities before completing this unit.');
-    renderDashboard();
+  if(!allUnitActivitiesDone(st)){
+    renderUnitProgress();
+    toast('Check Unit Progress to see which activities are still incomplete.');
     return;
   }
-  if(st.completed){toast('This unit is already completed.');return}
   st.completed=true;
   state[key(unitIndex)]=st;
-  addStudyDay();
-  save();
-  renderDashboard();
-  if(unitIndex<units.length-1)toast('Unit completed! The next unit is now unlocked.');
-  else toast('Amazing — you completed the full learning path!');
+  addStudyDay();save();renderDashboard();renderUnitProgress();
 }
 function save(){localStorage.setItem('sgcl_final',JSON.stringify(state))}
 function showTab(id){
@@ -330,55 +475,45 @@ function say(text){
     console.error(e);
   }
 }
-let rec;let recognition=null;
+let recognition=null;
 let recordingActive=false;
 function startRec(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){
-    toast('Speech recognition is not supported in this browser. Try Chrome.');
-    return;
-  }
+  if(!SR){toast('Speech recognition is not supported in this browser. Try Chrome.');return;}
   if(recognition){try{recognition.abort();}catch(e){}}
   const box=document.getElementById('transcript');
   box.value='';
+  let finalTranscript='';
   recognition=new SR();
   recognition.lang='en-US';
   recognition.continuous=false;
   recognition.interimResults=true;
   recordingActive=true;
-
-  recognition.onstart=()=>{
-    document.getElementById('recStatus').textContent='🎙 Listening...';
-  };
+  recognition.onstart=()=>{document.getElementById('recstatus').textContent='🎙 Listening...';};
   recognition.onresult=(event)=>{
-    let finalText='';
-    let interimText='';
-    for(let i=event.resultIndex;i<event.results.length;i++){
-      const text=event.results[i][0].transcript;
-      if(event.results[i].isFinal) finalText+=text+' ';
-      else interimText+=text;
+    let interim='';
+    let rebuiltFinal='';
+    for(let i=0;i<event.results.length;i++){
+      const txt=event.results[i][0].transcript.trim();
+      if(event.results[i].isFinal)rebuiltFinal+=(rebuiltFinal?' ':'')+txt;
+      else interim+=(interim?' ':'')+txt;
     }
-    if(finalText.trim()){
-      box.value=(box.value+' '+finalText).trim().replace(/\s+/g,' ');
-    }
-    document.getElementById('recStatus').textContent=
-      interimText ? '🎙 '+interimText : '🎙 Listening...';
+    finalTranscript=rebuiltFinal.trim();
+    box.value=finalTranscript;
+    document.getElementById('recstatus').textContent=interim?'🎙 '+interim:'🎙 Listening...';
   };
   recognition.onerror=(e)=>{
     recordingActive=false;
-    document.getElementById('recStatus').textContent=
-      e.error==='not-allowed' ? 'Microphone permission denied.' : 'Recording error: '+e.error;
+    document.getElementById('recstatus').textContent=e.error==='not-allowed'?'Microphone permission denied.':'Recording error: '+e.error;
   };
   recognition.onend=()=>{
     recordingActive=false;
-    document.getElementById('recStatus').textContent='✓ Recording finished';
+    box.value=finalTranscript.trim();
+    document.getElementById('recstatus').textContent='✓ Recording finished';
   };
-  try{recognition.start();}catch(e){
-    recordingActive=false;
-    document.getElementById('recStatus').textContent='Could not start recording.';
-  }
+  try{recognition.start();}catch(e){recordingActive=false;document.getElementById('recstatus').textContent='Could not start recording.';}
 }
-function stopRec(){if(rec)rec.stop()}
+function stopRec(){if(recognition){try{recognition.stop();}catch(e){}}}
 function evaluateSpeaking(){
   let t=document.getElementById('transcript').value.toLowerCase().trim();
   let ks=units[unitIndex].tags;
@@ -398,8 +533,10 @@ function evaluateWriting(){
   let n=ks.length-missing.length;
   let f=document.getElementById('writefb');
   f.style.display='block';
-  f.innerHTML=`<b>Writing check: ${n}/${ks.length} target terms.</b><br>${t.length<100?'Add more detail and give a concrete work example.':'Good. Now check articles, plurals, prepositions and natural marketing collocations.'}${missing.length?`<br><span class="small muted">Try to use: ${missing.map(escapeHtml).join(', ')}</span>`:''}`;
+  const enough=t.length>=100;
+  f.innerHTML=`<b>Writing check: ${n}/${ks.length} target terms.</b><br>${enough?'Good length. Now check articles, plurals, prepositions and natural marketing collocations.':'Add more detail. Aim for about 80–120 words.'}${missing.length?`<br><span class="small muted">Try to use: ${missing.map(escapeHtml).join(', ')}</span>`:''}`;
   if(missing.length){recordMistake('writing',{missing});save();}
+  if(enough)done('write');
 }
 function grade(){
   let qs=units[unitIndex].content.quiz, score=0, wrong=[];
@@ -434,6 +571,11 @@ function renderReview(){
           details.push({key:k,label:term,desc:'Use this target term again in your next answer.',count:counts[k]});
         });
       }
+      if(m.type==='translation'){
+        const k='Translation: '+(m.expected||m.question||'review');
+        counts[k]=(counts[k]||0)+1;
+        details.push({key:k,label:m.expected||'Translation practice',desc:'Translate this sentence again: '+(m.question||''),count:counts[k]});
+      }
     });
   });
   const unique={};
@@ -449,7 +591,7 @@ function renderReview(){
     ? `<p class="muted">Based on your recent answers, focus on these points first:</p>`+ranked.map(x=>`<div class="quote"><b>${escapeHtml(x.label)}</b> <span class="small muted">· ${x.count} time${x.count>1?'s':''}</span><br>${escapeHtml(x.desc)}</div>`).join('')
     : `<p class="muted">No personal mistakes recorded yet. Start with these core points:</p>`+fallback.map(x=>`<div class="quote"><b>${x[0]}</b><br>${x[1]}</div>`).join('');
 }
-function exportData(){let blob=new Blob([JSON.stringify({state,streak,lastStudyDate,exported:new Date().toISOString(),version:'1.1'},null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sun-grace-progress.json';a.click();URL.revokeObjectURL(a.href)}
+function exportData(){let blob=new Blob([JSON.stringify({state,streak,lastStudyDate,exported:new Date().toISOString(),version:'3.1-audited'},null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sun-grace-progress.json';a.click();URL.revokeObjectURL(a.href)}
 function importData(e){let file=e.target.files[0];if(!file)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x||typeof x!=='object'||typeof x.state!=='object')throw new Error('Invalid');state=x.state||{};streak=Number(x.streak)||0;lastStudyDate=typeof x.lastStudyDate==='string'?x.lastStudyDate:'';localStorage.setItem('sgcl_final',JSON.stringify(state));localStorage.setItem('sgcl_streak',String(streak));if(lastStudyDate)localStorage.setItem('sgcl_last_study',lastStudyDate);else localStorage.removeItem('sgcl_last_study');document.getElementById('streak').textContent=streak;renderDashboard();toast('Progress imported successfully.')}catch{toast('Invalid progress file.')}};r.readAsText(file)}
 function toast(t){let x=document.getElementById('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',2500)}
 renderDashboard();
